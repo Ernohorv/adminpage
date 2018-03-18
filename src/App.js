@@ -22,11 +22,13 @@ class App extends Component {
 
   start() {
     let ready = firebase.firestore().collection("Start").doc("xJZq9ld1rnbDrHx7jthl").collection("Ready").doc("Ready");
+    let queue = firebase.firestore().collection("Start").doc("xJZq9ld1rnbDrHx7jthl").collection("Ready").doc("LobbyOpen");
 
     if (this.state.clicked === false) {
       this.setState( {clicked: true})
     return ready.update({
-      Ready: true
+      Ready: true,
+      LobbyOpen: true,
       })
     .then(function() {
       console.log("Started!");
@@ -39,7 +41,8 @@ class App extends Component {
   else {
     this.setState( {clicked: false})
     return ready.update({
-      Ready: false
+      Ready: false,
+      LobbyOpen: false,
  	 })
    .then(function() {
     console.log("Stopped!");  
