@@ -5,6 +5,8 @@
   "dependencies": {
     "firebase": "^4.10.1",
     "firestore": "^1.1.6",
+    "grommet": "^1.10.1",
+    "grommet-css": "^1.6.0",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-firestore": "^0.6.0",
