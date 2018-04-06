@@ -24,6 +24,11 @@ import Layer from 'grommet/components/Layer';
 import Form from 'grommet/components/Form';
 import FormField from 'grommet/components/FormField';
 import RadioButton from 'grommet/components/RadioButton';
+import Meter from 'grommet/components/Meter';
+import Value from 'grommet/components/Value';
+import Distribution from 'grommet/components/Distribution';
+
+
 
 class App extends Component {
 
@@ -43,10 +48,13 @@ class App extends Component {
       layerActive: false,
       addNew: false,
       docID: '',
+      scores: 0,
+      distribution : [],
     }
     this.timerID;
     this.questionsRef = firebase.firestore().collection("Games").doc("Game1").collection("Questions");
     this.startRef = firebase.firestore().collection("Start").doc("Ready");
+    this.playersRef = firebase.firestore().collection("Games").doc("Game1").collection("Players");
   }
 
   componentWillMount(){
@@ -68,7 +76,6 @@ class App extends Component {
           questions: items,
         });
     });
-
     this.startRef.onSnapshot((doc) => {
       this.setState({
         ready: doc.data().Ready,
@@ -76,6 +83,28 @@ class App extends Component {
         endGame: doc.data().EndGame,
       });
     });
+
+    this.playersRef.onSnapshot((querySnapshot) => {
+      var items = [];
+      var percentage = [];
+      querySnapshot.forEach((doc) =>{
+          items.push(
+              doc.data().score,
+          );
+      });
+      let scores = items.filter(function (x, i, a) { 
+        return a.indexOf(x) == i; 
+      });
+      scores.forEach((score) => {
+        percentage.push(
+          {"label": score + " Points", "value": ((items.reduce((pre, cur) => (cur === score) ? ++pre : pre, 0)) / items.length) * 100}
+        );
+      });      
+      this.setState({
+        scores: items.length,
+        distribution: percentage,
+      });
+  });
   }
 
   onClickStart() {
@@ -90,6 +119,11 @@ class App extends Component {
           LobbyOpen: false,
           })
       }, 15000);
+    });
+    this.playersRef.get().then((query) => {
+      query.forEach((doc) => {
+        this.playersRef.doc(doc.id).delete();
+      });
     });
   }
 
@@ -323,6 +357,11 @@ class App extends Component {
           <Box align='center'>
             {startButton}
             </Box>
+            <Header>
+              <Heading>
+                Game settings
+              </Heading>
+            </Header>
             <Table scrollable={false}>
               <TableHeader labels={['Question', 'Answer 1', 'Answer 2', 'Answer 3', 'Correct', 'Actions']} />
               <tbody>
@@ -369,8 +408,26 @@ class App extends Component {
                   </TableRow>
               </tbody>
             </Table>
+            <Header>
+              <Heading>
+                Game statistics
+              </Heading>
+            </Header>
+            <Box>
+            <Value value={this.state.scores}
+              units='Total players'
+              size='large'
+              align='start' />
+            <Meter vertical={false}
+              size='large'
+              value={this.state.scores * 10} />
+          </Box>
+          <Distribution series={this.state.distribution}
+            full={false}
+            size='large'
+            units='%' />
         </Section>
-        {layer}
+          {layer}
       </GrommetApp>
     );
   }
