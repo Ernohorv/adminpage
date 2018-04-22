@@ -27,8 +27,8 @@ import RadioButton from 'grommet/components/RadioButton';
 import Meter from 'grommet/components/Meter';
 import Value from 'grommet/components/Value';
 import Distribution from 'grommet/components/Distribution';
-
-
+import Tabs from 'grommet/components/Tabs';
+import Tab from 'grommet/components/Tab';
 
 class App extends Component {
 
@@ -50,6 +50,7 @@ class App extends Component {
       docID: '',
       scores: 0,
       distribution : [],
+      correctType: '',
     }
     this.timerID;
     this.questionsRef = firebase.firestore().collection("Games").doc("Game1").collection("Questions");
@@ -163,6 +164,12 @@ class App extends Component {
     });
   }
 
+  onChangedCorrectType(event){
+    this.setState({
+      correctType: event.target.value
+    });
+  }
+
   onChangedAnswerA(event){
     this.setState({
       answer_a: event.target.value
@@ -190,7 +197,7 @@ class App extends Component {
     });
   }
 
-  addQuestion(){
+  addSelectableQuestion(){
     let correct = this.state.correct.findIndex(function (el) {
       return el === true;
     });
@@ -201,6 +208,23 @@ class App extends Component {
       Answer_B: this.state.answer_b,
       Answer_C: this.state.answer_c,
       Correct: correct.toString(),
+      type: 'selectable',
+    })
+    .then(function(docRef) {
+      console.log("Document written with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
+    this.onLayerClose();
+  }
+
+  addTypeableQuestion(){
+    let id = "Q" + (this.state.questions.length + 1);
+    this.questionsRef.doc(id).set({
+      Question: this.state.question,
+      Correct: this.state.correctType.toString(),
+      type: 'typeable'
     })
     .then(function(docRef) {
       console.log("Document written with ID: ", docRef.id);
@@ -255,7 +279,7 @@ class App extends Component {
     this.onLayerOpen(false);
   }
 
-  editQuestion(){
+  editSelectableQuestion(){
     let correct = this.state.correct.findIndex(function (el) {
       return el === true;
     });
@@ -264,6 +288,23 @@ class App extends Component {
       Answer_A: this.state.answer_a,
       Answer_B: this.state.answer_b,
       Answer_C: this.state.answer_c,
+      Correct: correct.toString(),
+    })
+    .then(function(docRef) {
+      console.log("Document edited with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
+    this.onLayerClose();
+  }
+
+  editTypeableQuestion(){
+    let correct = this.state.correct.findIndex(function (el) {
+      return el === true;
+    });
+    this.questionsRef.doc(this.state.docID).set({
+      Question: this.state.question,
       Correct: correct.toString(),
     })
     .then(function(docRef) {
@@ -301,52 +342,78 @@ class App extends Component {
     ) : (
       <Heading>Edit question</Heading>
     )
-    const button = (this.state.addNew) ? (
+    const selectableButton = (this.state.addNew) ? (
       <Button label='Add'
                 type='button'
                 primary={true}
-                onClick={this.addQuestion.bind(this)} />
+                onClick={this.addSelectableQuestion.bind(this)} />
     ) : (
       <Button label='Edit'
                 type='button'
                 primary={true}
-                onClick={this.editQuestion.bind(this)} />
+                onClick={this.editSelectableQuestion.bind(this)} />
+    )
+    const typeableButton = (this.state.addNew) ? (
+      <Button label='Add'
+                type='button'
+                primary={true}
+                onClick={this.addTypeableQuestion.bind(this)} />
+    ) : (
+      <Button label='Edit'
+                type='button'
+                primary={true}
+                onClick={this.editTypeableQuestion.bind(this)} />
     )
     const layer = (this.state.layerActive) ? (
-        <Layer onClose={this.onLayerClose.bind(this)} overlayClose={true} closer={true} align={"center"}>
+        <Layer onClose={this.onLayerClose.bind(this)} overlayClose={true} closer={true} align={"top"}>
           <Form>
             <Header>
               {heading}
             </Header>
+            <Tabs>
+              <Tab title='Selectable'>
+                <FormField label='Question'>
+                  <TextInput onDOMChange={(evt) => this.onChangedQuestion(evt)} value={this.state.question} />
+                </FormField>
+                <FormField label='Answer 1'>
+                  <TextInput onDOMChange={(evt) => this.onChangedAnswerA(evt)} value={this.state.answer_a} />
+                </FormField>
+                <FormField label='Answer 2'>
+                  <TextInput onDOMChange={(evt) => this.onChangedAnswerB(evt)} value={this.state.answer_b} />
+                </FormField>
+                <FormField label='Answer 3'>
+                  <TextInput onDOMChange={(evt) => this.onChangedAnswerC(evt)} value={this.state.answer_c} />
+                </FormField>
+                <FormField label='Correct answer'>
+                <RadioButton id='correct-1'
+                  label='Answer 1'
+                  checked={this.state.correct[0]}
+                  onChange={(evt) => this.onChangedCorrect(evt)} />
+                <RadioButton id='correct-2'
+                  label='Answer 2'
+                  checked={this.state.correct[1]}
+                  onChange={(evt) => this.onChangedCorrect(evt)} />
+                <RadioButton id='correct-3'
+                  label='Answer 3'
+                  checked={this.state.correct[2]}
+                  onChange={(evt) => this.onChangedCorrect(evt)} />
+                </FormField>
+                <Footer pad={{"vertical": "medium"}}>
+                  {selectableButton}
+                </Footer>
+              </Tab>
+              <Tab title='Typeable'>
               <FormField label='Question'>
-                <TextInput onDOMChange={(evt) => this.onChangedQuestion(evt)} value={this.state.question} />
-              </FormField>
-              <FormField label='Answer 1'>
-                <TextInput onDOMChange={(evt) => this.onChangedAnswerA(evt)} value={this.state.answer_a} />
-              </FormField>
-              <FormField label='Answer 2'>
-                <TextInput onDOMChange={(evt) => this.onChangedAnswerB(evt)} value={this.state.answer_b} />
-              </FormField>
-              <FormField label='Answer 3'>
-                <TextInput onDOMChange={(evt) => this.onChangedAnswerC(evt)} value={this.state.answer_c} />
-              </FormField>
-              <FormField label='Correct answer'>
-              <RadioButton id='correct-1'
-                label='Answer 1'
-                checked={this.state.correct[0]}
-                onChange={(evt) => this.onChangedCorrect(evt)} />
-              <RadioButton id='correct-2'
-                label='Answer 2'
-                checked={this.state.correct[1]}
-                onChange={(evt) => this.onChangedCorrect(evt)} />
-              <RadioButton id='correct-3'
-                label='Answer 3'
-                checked={this.state.correct[2]}
-                onChange={(evt) => this.onChangedCorrect(evt)} />
-            </FormField>
-            <Footer pad={{"vertical": "medium"}}>
-              {button}
-            </Footer>
+                  <TextInput onDOMChange={(evt) => this.onChangedQuestion(evt)} value={this.state.question} />
+                </FormField>
+                <FormField label='Correct answer'>
+                  <TextInput onDOMChange={(evt) => this.onChangedCorrectType(evt)} value={this.state.correctType} />
+                </FormField>
+                <Footer pad={{"vertical": "medium"}}>
+                  {typeableButton}
+                </Footer>
+              </Tab>
+            </Tabs> 
           </Form>
         </Layer>
     ) : undefined;
