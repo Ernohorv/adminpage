@@ -116,12 +116,11 @@ class App extends Component {
         "Content-Type": "application/json; charset=utf-8",
         "Authorization": "Basic MDQxOGE1NDQtNDhlYy00MDI0LTg4ZjktZGE1ZTk0ODZjOTg0"
       },
-      body: {
-        "app_id": "cb469d71-b4b5-4563-9572-318679f8ae08",
-        "included_segments": ["All"],
-        "data": {"foo": "bar"},
-        "contents": {"en": "Hurry, it's question time!"}
-      }
+      body: JSON.stringify({
+        app_id: "cb469d71-b4b5-4563-9572-318679f8ae08",
+        included_segments: ["All"],
+        contents: {"en": "Hurry, it's question time!"}
+      })
     }).then((response) => response.json())
     .then((responseJson) => {
       console.log(responseJson);
