@@ -69,7 +69,8 @@ class App extends Component {
                 'B': doc.data().Answer_B,
                 'C': doc.data().Answer_C,
                 'Correct': doc.data().Correct,
-                'ID': doc.id
+                'ID': doc.id,
+                'Type' : doc.data().type
               }
             );
         });
@@ -94,7 +95,7 @@ class App extends Component {
           );
       });
       let scores = items.filter(function (x, i, a) { 
-        return a.indexOf(x) == i; 
+        return a.indexOf(x) === i; 
       });
       scores.forEach((score) => {
         percentage.push(
@@ -235,6 +236,22 @@ class App extends Component {
     this.onLayerClose();
   }
 
+  addDrawableQuestion(){
+    let id = "Q" + (this.state.questions.length + 1);
+    this.questionsRef.doc(id).set({
+      Question: this.state.question,
+      Correct: this.state.correctType.toString(),
+      type: 'drawable'
+    })
+    .then(function(docRef) {
+      console.log("Document written with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
+    this.onLayerClose();
+  }
+
   deleteQuestion(id){
     let questions = this.state.questions;
     let lastID = "Q" + questions.length;
@@ -253,6 +270,7 @@ class App extends Component {
         Answer_B: question.B,
         Answer_C: question.C,
         Correct: question.Correct.toString(),
+        type: question.Type.toString(),
       })
     });
     this.questionsRef.doc(lastID).delete().then(function() {
@@ -305,7 +323,26 @@ class App extends Component {
     });
     this.questionsRef.doc(this.state.docID).set({
       Question: this.state.question,
-      Correct: correct.toString(),
+      Correct: this.state.correctType.toString(),
+      type: 'typeable'
+    })
+    .then(function(docRef) {
+      console.log("Document edited with ID: ", docRef.id);
+    })
+    .catch(function(error) {
+      console.error("Error adding document: ", error);
+    });
+    this.onLayerClose();
+  }
+
+  editDrawableQuestion(){
+    let correct = this.state.correct.findIndex(function (el) {
+      return el === true;
+    });
+    this.questionsRef.doc(this.state.docID).set({
+      Question: this.state.question,
+      Correct: this.state.correctType.toString(),
+      type: 'drawable'
     })
     .then(function(docRef) {
       console.log("Document edited with ID: ", docRef.id);
@@ -364,6 +401,17 @@ class App extends Component {
                 primary={true}
                 onClick={this.editTypeableQuestion.bind(this)} />
     )
+    const drawableButton = (this.state.addNew) ? (
+      <Button label='Add'
+                type='button'
+                primary={true}
+                onClick={this.addDrawableQuestion.bind(this)} />
+    ) : (
+      <Button label='Edit'
+                type='button'
+                primary={true}
+                onClick={this.editDrawableQuestion.bind(this)} />
+    )
     const layer = (this.state.layerActive) ? (
         <Layer onClose={this.onLayerClose.bind(this)} overlayClose={true} closer={true} align={"top"}>
           <Form>
@@ -413,6 +461,17 @@ class App extends Component {
                   {typeableButton}
                 </Footer>
               </Tab>
+              <Tab title='Drawable'>
+              <FormField label='Question'>
+                  <TextInput onDOMChange={(evt) => this.onChangedQuestion(evt)} value={this.state.question} />
+                </FormField>
+                <FormField label='Correct answer'>
+                  <TextInput onDOMChange={(evt) => this.onChangedCorrectType(evt)} value={this.state.correctType} />
+                </FormField>
+                <Footer pad={{"vertical": "medium"}}>
+                  {drawableButton}
+                </Footer>
+              </Tab>
             </Tabs> 
           </Form>
         </Layer>
@@ -448,7 +507,7 @@ class App extends Component {
                     {question.C}
                   </td>
                   <td>
-                    {parseInt(question.Correct, 10) + 1}
+                    {question.Type === "selectable" ? parseInt(question.Correct, 10) + 1 : question.Type === "drawable" ? question.Correct : parseInt(question.Correct, 10) }
                   </td>
                   <td>
                     <Button icon={<EditIcon />} onClick={this.openEditQuestion.bind(this, question.ID)} />
